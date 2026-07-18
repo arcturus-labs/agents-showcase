@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any
-
-from .enums import UpdateActor, UpdateType
+from dataclasses import dataclass
 
 
 @dataclass
@@ -25,16 +21,6 @@ class JobOpening:
 
 
 @dataclass
-class ApplicationUpdate:
-    timestamp: datetime
-    actor: UpdateActor
-    update_type: UpdateType
-    internal_notes: str
-    correspondence: str
-    recruiter_id: str | None = None
-
-
-@dataclass
 class Application:
     id: str
     firstName: str
@@ -45,44 +31,6 @@ class Application:
     linkedinUrl: str
     region: str
     jobOpening: JobOpening
-    updates: list[ApplicationUpdate] = field(default_factory=list)
-
-
-class InMemoryApplicationService:
-    def __init__(self, application: Application) -> None:
-        self._application = application
-
-    async def get_application(self, application_id: str) -> Application:
-        if application_id != self._application.id:
-            raise KeyError(f"Unknown application_id: {application_id}")
-        return self._application
-
-    async def add_update(
-        self,
-        application_id: str,
-        actor: UpdateActor,
-        update_type: UpdateType,
-        internal_notes: str,
-        correspondence: str,
-        recruiter_id: str | None,
-    ) -> None:
-        if application_id != self._application.id:
-            raise KeyError(f"Unknown application_id: {application_id}")
-
-        self._application.updates.append(
-            ApplicationUpdate(
-                timestamp=datetime.now(timezone.utc),
-                actor=actor,
-                update_type=update_type,
-                internal_notes=internal_notes,
-                correspondence=correspondence,
-                recruiter_id=recruiter_id,
-            )
-        )
-
-    @property
-    def application(self) -> Application:
-        return self._application
 
 
 def example_application() -> Application:
@@ -99,15 +47,15 @@ def example_application() -> Application:
         linkedinUrl="https://www.linkedin.com/in/softwaredoug/",
         region="Charlottesville, Virginia, United States",
         jobOpening=JobOpening(
-            title="Principal Search / AI Engineer",
-            seniorityLevel="Principal",
-            department="ENGINEERING",
-            subDepartments=["ENG_DATA", "ENG_BACKEND"],
+            title="Lead Mobile Product Designer",
+            seniorityLevel="Lead",
+            department="DESIGN",
+            subDepartments=["PROD_MOBILE", "DES_UI"],
             jobDescription=(
-                "We are hiring a principal-level engineer to lead search relevance, hybrid retrieval, "
-                "LLM-powered search quality, evaluation systems, and production ranking infrastructure. "
-                "Strong experience with information retrieval, machine learning, Python, experimentation, "
-                "and technical leadership is required."
+                "We are hiring a lead mobile product designer to own end-to-end UX for our iOS and Android "
+                "apps. The role requires strong product design craft, interaction design, prototyping, visual "
+                "design systems experience, close partnership with product and engineering, and a portfolio "
+                "showing shipped mobile consumer experiences."
             ),
             company=Company(
                 name="Arcturus Labs",
@@ -115,14 +63,4 @@ def example_application() -> Application:
                 size="11-50",
             ),
         ),
-        updates=[
-            ApplicationUpdate(
-                timestamp=datetime(2025, 7, 1, 15, 0, tzinfo=timezone.utc),
-                actor=UpdateActor.HUMAN_RECRUITER,
-                update_type=UpdateType.REQUEST_AI_SCREEN,
-                internal_notes="Initial recruiter pass: promising fit for search relevance leadership. Requesting AI screen.",
-                correspondence="",
-                recruiter_id="recruiter-001",
-            )
-        ],
     )

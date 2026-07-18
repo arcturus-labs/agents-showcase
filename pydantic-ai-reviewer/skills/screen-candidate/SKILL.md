@@ -1,6 +1,6 @@
 ---
 name: screen-candidate
-description: Screen job candidates for advancement decisions. Use this whenever the AI screening agent evaluates a candidate for advance/decline/follow-up and must judge fit against a specific job opening using the candidate profile, job-opening details, prior updates, and external evidence.
+description: Screen job candidates for advancement decisions. Use this whenever the AI screening agent evaluates a candidate for advance/decline/follow-up and must judge fit against a specific job opening using the candidate profile, job-opening details, and external evidence.
 ---
 
 # Screen Candidate (Manual Review)
@@ -58,7 +58,7 @@ Identity safety rule:
 3. Read the job description carefully before deciding whether the profile matches.
 4. Run a quick email-risk pass (named domain vs shared mailbox vs personal domain) only as supporting context.
 5. Obtain the candidate's full LinkedIn profile through the `get_linkedin_profile` tool.
-6. Evaluate role fit using the full LinkedIn profile, other public evidence, prior updates, and the candidate's materials.
+6. Evaluate role fit using the full LinkedIn profile, other public evidence, and the candidate's materials.
 7. If the full LinkedIn profile cannot be obtained, recommend `recommend_follow_up` asking for the correct LinkedIn profile.
 8. If fit is unclear even with the full LinkedIn profile, gather the minimum additional evidence needed.
 9. Produce the narrowest defensible recommendation.
@@ -72,15 +72,6 @@ Just before finalizing `internal_notes`, review `references/internal-notes-check
 Do not finalize `internal_notes` until the review is complete enough to support a real recommendation.
 
 Review `references/correspondence-playbook.md` for the correct template and draft `correspondence` before finalizing your output.
-
-## Human-overrides-AI rule
-
-Prior updates include actor metadata (`human_recruiter`, `ai_agent`, `candidate`).
-
-- Treat prior human reviewer judgments as authoritative by default.
-- If prior AI and the judgment of the human reviewer conflict, follow the human judgment unless there is new materially relevant evidence after the human judgment.
-- Candidate messages can provide useful context, but their claims still need supporting evidence when the claim matters to the decision.
-- If you diverge due to new evidence, state that explicitly in `internal_notes`.
 
 ## Quality bar
 

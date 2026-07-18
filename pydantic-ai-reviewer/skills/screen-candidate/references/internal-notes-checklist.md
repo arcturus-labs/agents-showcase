@@ -29,7 +29,6 @@ Rationale: <1-4 short lines: what evidence was found/missing, where (URLs), and 
 - Keep it short and scannable.
 - Capture only decision-relevant information.
 - If information becomes irrelevant, remove it in later updates.
-- Mention when following prior human judgment.
 - Include unresolved items explicitly so reviewers know next step.
 - If website evidence was used (including LinkedIn), inline the exact URLs in the relevant checklist lines and in `Rationale`.
 - Each checklist item should be a little descriptive: state what you checked, what you found (or did not find), where you checked (URL), and why it matters.
