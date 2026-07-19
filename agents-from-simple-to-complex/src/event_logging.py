@@ -1,3 +1,4 @@
+import hashlib
 import json
 from collections.abc import AsyncIterable
 
@@ -61,6 +62,12 @@ def _fmt_tool_result(content: object) -> str:
     return truncate(text)
 
 
+def _short_id(tool_call_id: str | None) -> str:
+    if not tool_call_id:
+        return ""
+    return hashlib.md5(tool_call_id.encode()).hexdigest()[:6]
+
+
 def _fmt_event(event: object) -> str | None:
     if isinstance(event, PartStartEvent):
         return None
@@ -79,15 +86,18 @@ def _fmt_event(event: object) -> str | None:
 
     if isinstance(event, FunctionToolCallEvent):
         part = event.part
-        return color(C_TOOL_CALL, f"⚙ tool_call: {part.tool_name}{_fmt_args(part.args)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_CALL, f"⚙ tool_call<{short_id}>: {part.tool_name}{_fmt_args(part.args)}")
 
     if isinstance(event, FunctionToolResultEvent):
         part = event.part
-        return color(C_TOOL_RESP, f"↩ tool_response: {part.tool_name}\n{_fmt_tool_result(part.content)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_RESP, f"↩ tool_response<{short_id}>: {part.tool_name}\n{_fmt_tool_result(part.content)}")
 
     if isinstance(event, OutputToolCallEvent):
         part = event.part
-        return color(C_TOOL_CALL, f"⚙ output_tool_call: {part.tool_name}{_fmt_args(part.args)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_CALL, f"⚙ output_tool_call<{short_id}>: {part.tool_name}{_fmt_args(part.args)}")
 
     if isinstance(event, OutputToolResultEvent):
         return color(C_TOOL_RESP, "↩ output_tool_result")
@@ -107,33 +117,23 @@ def _fmt_event(event: object) -> str | None:
     return color(C_META, repr(event))
 
 
-def print_prompt(prompt: str) -> None:
-    print(color(C_HEADER, f"\n{'─' * 70}"))
-    print(color(C_HEADER, "PROMPT"))
-    print(color(C_HEADER, f"{'─' * 70}"))
-    print(prompt)
-
-
 def make_event_stream_printer():
     printed_header = False
 
     async def print_event_stream(_ctx: object, events: AsyncIterable[object]) -> None:
         nonlocal printed_header
-        if not printed_header:
-            print(color(C_HEADER, f"\n{'─' * 70}"))
-            print(color(C_HEADER, "AGENT TRACE"))
-            print(color(C_HEADER, f"{'─' * 70}\n"))
-            printed_header = True
         async for event in events:
             rendered = _fmt_event(event)
             if rendered:
+                if not printed_header:
+                    print(color(C_HEADER, f"\n{'─' * 70}"))
+                    print(color(C_HEADER, "AGENT TRACE"))
+                    print(color(C_HEADER, f"{'─' * 70}\n"))
+                    printed_header = True
                 print(rendered)
 
     return print_event_stream
 
 
 def print_response(output: str) -> None:
-    print(color(C_HEADER, f"\n{'─' * 70}"))
-    print(color(C_HEADER, "FINAL RESPONSE"))
-    print(color(C_HEADER, f"{'─' * 70}"))
-    print(color(C_FINAL, output))
+    print(color(C_FINAL, f"Response: {output}"))
