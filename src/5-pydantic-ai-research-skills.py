@@ -18,11 +18,11 @@ def main(user_prompt: str) -> None:
         "anthropic:claude-haiku-4-5",
         name="read_write_edit_skills_agent",
         retries=3,
-        instructions="You are a helpful assistant. Be concise.",
+        instructions="You research things by rummaging around wikipedia.",
         capabilities=[
             FileSystem(root_dir=project_root),
             Shell(cwd=project_root),
-            WebSearch(),
+            # WebSearch(),
             SkillsCapability(directories=[project_root / ".agents" / "skills"]),
         ],
     )

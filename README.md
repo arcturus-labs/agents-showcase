@@ -15,7 +15,7 @@ Demo code for **"Build Your Own Agent — Escaping the Harness,"** a lightning t
 All examples live in `src/`. From the repo root:
 
 ```bash
-agents-from-simple-to-complex/.venv/bin/python src/N-<name>.py
+uv run python src/N-<name>.py
 ```
 
 A `.env` file at the repo root with `ANTHROPIC_API_KEY=…` is expected (`load_dotenv` handles the rest).

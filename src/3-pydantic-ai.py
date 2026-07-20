@@ -23,11 +23,16 @@ def main(user_prompt: str) -> None:
         Args:
             query: The search query to look up on Hacker News.
         """
-        print(f"-----------------------\nTool call: search_hacker_news({json.dumps({'query': query})})")
         with urlopen(
-            f"https://hn.algolia.com/api/v1/search?query={quote(query)}"
+            f"https://hn.algolia.com/api/v1/search?query={quote(query)}&hitsPerPage=5&tags=story"
         ) as response:
-            tool_result = response.read().decode()
+            data = json.loads(response.read().decode())
+        # trim noisy fields to save tokens
+        for hit in data.get("hits", []):
+            hit.pop("_highlightResult", None)
+            hit.pop("children", None)
+        tool_result = json.dumps(data)
+        print(f"-----------------------\nTool call: search_hacker_news({json.dumps({'query': query})})")
         print(f"-----------------------\nTool response: {tool_result}")
         return tool_result
 

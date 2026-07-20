@@ -11,9 +11,14 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 def search_hacker_news(query: str) -> str:
     with urlopen(
-        f"https://hn.algolia.com/api/v1/search?query={quote(query)}"
+        f"https://hn.algolia.com/api/v1/search?query={quote(query)}&hitsPerPage=5&tags=story"
     ) as response:
-        return response.read().decode()
+        data = json.loads(response.read().decode())
+    # trim noisy fields to save tokens
+    for hit in data.get("hits", []):
+        hit.pop("_highlightResult", None)
+        hit.pop("children", None)
+    return json.dumps(data)
 
 
 def main(user_prompt: str) -> None:

@@ -20,7 +20,7 @@ def main(user_prompt: str) -> None:
     text = "\n".join(
         block.text for block in response.content if block.type == "text"
     )
-    print(f"----------------------- Response: {text}")
+    print(f"-----------------------\nResponse: {text}")
 
 
 if __name__ == "__main__":
