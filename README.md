@@ -6,8 +6,6 @@ Demo code for **"Build Your Own Agent — Escaping the Harness,"** a lightning t
 2. **Agents can do more than coding work** — with the right instructions and tools they become reviewers, researchers, assistants.
 3. **Agents can live far beyond the terminal** — embedded inside products, or interacting with products from the outside.
 
-> Full slide outline: [presentation-workbench/examples/unharness-the-agent/planning/outline.md](https://github.com/the-rooks-nest/presentation-workbench/blob/main/examples/unharness-the-agent/planning/outline.md)
-
 ---
 
 ## How to run
@@ -42,7 +40,9 @@ Example 7 is the bridge from "agents in a terminal" to "agents inside products" 
 
 ```
 agents-showcase/
-  .env                          ← API key (gitignored)
+  .env                          ← local API key file (gitignored)
+  pyproject.toml                ← project metadata and dependencies
+  uv.lock                       ← locked dependency versions
   src/                          ← all demo scripts
     event_logging.py            ← shared ANSI trace printer
     1-just-a-model.py
@@ -51,5 +51,6 @@ agents-showcase/
     7-pydantic-ai-reviewer.py
   skills/
     screen-candidate/SKILL.md   ← skill used by demo 7
-  agents-from-simple-to-complex/  ← pyproject.toml + venv
+  slides/                       ← exported talk slides and assets
+  scratch_space/                ← throwaway workspace used by some demos
 ```
