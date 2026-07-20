@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import hashlib
 import json
 from collections.abc import AsyncIterable
 
@@ -17,9 +16,6 @@ from pydantic_ai.messages import (
     PartStartEvent,
 )
 
-from .ai_reviewer import AIReviewOutput
-from .models import Application
-
 RESET = "\033[0m"
 BOLD = "\033[1m"
 DIM = "\033[2m"
@@ -33,6 +29,9 @@ C_META = "\033[90m"
 C_FINAL = "\033[96m"
 
 TRUNCATE_AT = 500
+
+
+__all__ = ["color", "C_HEADER", "C_FINAL", "make_event_stream_printer", "print_response"]
 
 
 def color(c: str, text: str) -> str:
@@ -66,20 +65,15 @@ def _fmt_tool_result(content: object) -> str:
     return truncate(text)
 
 
+def _short_id(tool_call_id: str | None) -> str:
+    if not tool_call_id:
+        return ""
+    return hashlib.md5(tool_call_id.encode()).hexdigest()[:6]
+
+
 def _fmt_event(event: object) -> str | None:
     if isinstance(event, PartStartEvent):
-        part_kind = getattr(event.part, "part_kind", type(event.part).__name__)
-        if part_kind == "thinking":
-            return color(C_THINKING, "[thinking]")
-        if part_kind == "text":
-            return color(C_TEXT, "[assistant drafting final review]")
-        if part_kind == "tool-call":
-            return color(C_TOOL_CALL, "[tool call stream]")
-        if part_kind == "builtin-tool-call":
-            return color(C_TOOL_CALL, "[builtin tool call]")
-        if part_kind == "builtin-tool-return":
-            return color(C_TOOL_RESP, "[builtin tool result]")
-        return color(C_META, f"[{part_kind}]")
+        return None
 
     if isinstance(event, PartDeltaEvent):
         delta_kind = getattr(event.delta, "part_delta_kind", type(event.delta).__name__)
@@ -95,15 +89,18 @@ def _fmt_event(event: object) -> str | None:
 
     if isinstance(event, FunctionToolCallEvent):
         part = event.part
-        return color(C_TOOL_CALL, f"⚙ tool_call: {part.tool_name}{_fmt_args(part.args)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_CALL, f"⚙ tool_call<{short_id}>: {part.tool_name}{_fmt_args(part.args)}")
 
     if isinstance(event, FunctionToolResultEvent):
         part = event.part
-        return color(C_TOOL_RESP, f"↩ tool_response: {part.tool_name}\n{_fmt_tool_result(part.content)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_RESP, f"↩ tool_response<{short_id}>: {part.tool_name}\n{_fmt_tool_result(part.content)}")
 
     if isinstance(event, OutputToolCallEvent):
         part = event.part
-        return color(C_TOOL_CALL, f"⚙ output_tool_call: {part.tool_name}{_fmt_args(part.args)}")
+        short_id = _short_id(part.tool_call_id)
+        return color(C_TOOL_CALL, f"⚙ output_tool_call<{short_id}>: {part.tool_name}{_fmt_args(part.args)}")
 
     if isinstance(event, OutputToolResultEvent):
         return color(C_TOOL_RESP, "↩ output_tool_result")
@@ -118,15 +115,37 @@ def _fmt_event(event: object) -> str | None:
         return color(C_META, "[deferred tool results]")
 
     if isinstance(event, FinalResultEvent):
-        return color(C_FINAL, "[final result]")
+        return None
 
     return color(C_META, repr(event))
 
 
-def print_review_input(application: Application) -> None:
+def make_event_stream_printer():
+    printed_header = False
+
+    async def print_event_stream(_ctx: object, events: AsyncIterable[object]) -> None:
+        nonlocal printed_header
+        async for event in events:
+            rendered = _fmt_event(event)
+            if rendered:
+                if not printed_header:
+                    print(color(C_HEADER, f"\n{'─' * 70}"))
+                    print(color(C_HEADER, "AGENT TRACE"))
+                    print(color(C_HEADER, f"{'─' * 70}\n"))
+                    printed_header = True
+                print(rendered)
+
+    return print_event_stream
+
+
+def print_response(output: str) -> None:
+    print(color(C_FINAL, f"Response: {output}"))
+
+
+def print_review_input(application):  # no type hints — avoids dependency on 7-pydantic-ai-reviewer
+    """Print the application + job opening as the agent sees it."""
     job_opening = application.jobOpening
-    hiring_company = job_opening.company
-    sub_departments = ", ".join(str(value) for value in job_opening.subDepartments) or "None"
+    sub_departments = ", ".join(str(v) for v in job_opening.subDepartments) or "None"
 
     print(color(C_HEADER, f"\n{'─' * 70}"))
     print(color(C_HEADER, "REVIEW INPUT"))
@@ -142,33 +161,14 @@ def print_review_input(application: Application) -> None:
     print(f"Job opening department: {job_opening.department}")
     print(f"Job opening sub-departments: {sub_departments}")
     print(f"Job opening description: {job_opening.jobDescription}")
-    print(f"Hiring company: {hiring_company.name}")
-    print(f"Hiring company site: {hiring_company.siteUrl}")
-    print(f"Hiring company size: {hiring_company.size}")
+    print(f"Hiring company: {job_opening.company}")
     print(f"Candidate region: {application.region}")
     print()
     print("Please screen this candidate using the screen-candidate skill.")
 
 
-def make_event_stream_printer():
-    printed_header = False
-
-    async def print_event_stream(_ctx: object, events: AsyncIterable[object]) -> None:
-        nonlocal printed_header
-        if not printed_header:
-            print(color(C_HEADER, f"\n{'─' * 70}"))
-            print(color(C_HEADER, "AGENT TRACE"))
-            print(color(C_HEADER, f"{'─' * 70}\n"))
-            printed_header = True
-        async for event in events:
-            rendered = _fmt_event(event)
-            if rendered:
-                print(rendered)
-
-    return print_event_stream
-
-
-def print_review_output(output: AIReviewOutput) -> None:
+def print_review_output(output):  # no type hints — avoids dependency on 7-pydantic-ai-reviewer
+    """Print the structured review result."""
     print(color(C_HEADER, f"\n{'─' * 70}"))
     print(color(C_HEADER, "FINAL REVIEW"))
     print(color(C_HEADER, f"{'─' * 70}"))

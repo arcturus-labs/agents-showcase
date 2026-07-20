@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def main(user_prompt: str) -> None:

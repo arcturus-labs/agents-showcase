@@ -9,10 +9,10 @@ from pydantic_ai_skills import SkillsCapability
 
 from event_logging import make_event_stream_printer, print_response
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 def main(user_prompt: str) -> None:
-    project_root = Path(__file__).resolve().parents[2] / "scratch_space"
+    project_root = Path(__file__).resolve().parents[1] / "scratch_space"
 
     agent = Agent(
         "anthropic:claude-haiku-4-5",

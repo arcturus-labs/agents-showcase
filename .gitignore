@@ -30,7 +30,6 @@ dist/
 .env
 .env.*
 !.env.example
-!**/.env.example
 
 # Local outputs
 *.log

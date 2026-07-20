@@ -6,7 +6,7 @@ from urllib.request import urlopen
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def search_hacker_news(query: str) -> str:

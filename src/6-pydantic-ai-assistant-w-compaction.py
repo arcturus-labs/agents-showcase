@@ -1,19 +1,14 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent, RunContext
-from pydantic_ai.capabilities import WebSearch
 from pydantic_ai.capabilities.hooks import Hooks
 from pydantic_ai.messages import ModelRequest, UserPromptPart
 from pydantic_ai.models import ModelRequestContext
-from pydantic_ai_harness.filesystem import FileSystem
-from pydantic_ai_harness.shell import Shell
-from pydantic_ai_skills import SkillsCapability
 
 from event_logging import make_event_stream_printer, print_response
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 SUMMARIZER = Agent(
     "anthropic:claude-haiku-4-5",
@@ -23,10 +18,10 @@ SUMMARIZER = Agent(
 )
 
 
-@dataclass
 class Session:
-    message_history: list[object] = field(default_factory=list)
-    summarizer: Agent = field(default_factory=lambda: SUMMARIZER)
+    def __init__(self) -> None:
+        self.message_history = []
+        self.summarizer = SUMMARIZER
 
 
 def main() -> None:
@@ -37,10 +32,7 @@ def main() -> None:
         deps_type=Session,
         retries=3,
         instructions="You are a helpful assistant. Be concise.",
-        capabilities=[
-            WebSearch(),
-            hooks,
-        ],
+        capabilities=[hooks],
     )
 
     @hooks.on.before_model_request
